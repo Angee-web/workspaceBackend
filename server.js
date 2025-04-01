@@ -1,6 +1,8 @@
 require("dotenv").config();
 const http = require("http");
 const app = require("./app");
+const connectDB = require("./config/database");
+
 
 // Set up uncaught exception handler
 process.on("uncaughtException", (err) => {
@@ -20,7 +22,8 @@ server.listen(PORT, () => {
   console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 
   // Log important environment variables without exposing sensitive data
-  console.log(`Database connected: ${process.env.MONGO_URI ? "Yes" : "No"}`);
+ connectDB().then(() => console.log("Database connected successfully"));
+
   console.log(
     `Email service configured: ${process.env.EMAIL_HOST ? "Yes" : "No"}`
   );
@@ -35,13 +38,18 @@ server.listen(PORT, () => {
 });
 
 // Handle unhandled promise rejections
-process.on("unhandledRejection", (err) => {
-  console.error("UNHANDLED REJECTION! Shutting down...");
+process.on("unhandledRejection", async (err) => {
+  console.error("UNHANDLED REJECTION! Attempting graceful recovery...");
   console.error(err.name, err.message);
-  server.close(() => {
-    process.exit(1);
-  });
+
+  try {
+    await connectDB(); // Attempt to reconnect
+  } catch (dbErr) {
+    console.error("Database reconnection failed. Shutting down...");
+    server.close(() => process.exit(1));
+  }
 });
+
 
 // Handle SIGTERM signal (e.g. Heroku shutdown)
 process.on("SIGTERM", () => {

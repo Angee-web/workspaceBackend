@@ -8,7 +8,7 @@ const xss = require("xss-clean");
 const hpp = require("hpp");
 const cookieParser = require("cookie-parser");
 const path = require("path");
-const { connectDB } = require("./config/database");
+// const connectDB = require("./config/database");
 const apiRoutes = require("./routes/api");
 const scheduledJobs = require("./jobs/scheduledTasks");
 
@@ -16,7 +16,7 @@ const scheduledJobs = require("./jobs/scheduledTasks");
 const app = express();
 
 // Connect to database
-connectDB();
+// connectDB();
 
 // Security middleware
 app.use(helmet()); // Set security HTTP headers
@@ -33,7 +33,7 @@ const limiter = rateLimit({
   max: 100, // Limit each IP to 100 requests per windowMs
   message: "Too many requests from this IP, please try again after 15 minutes",
 });
-app.use("/api", limiter);
+app.use("/api/v1", limiter);
 
 // Body parser
 app.use(express.json({ limit: "10mb" }));
@@ -86,9 +86,10 @@ app.use((err, req, res, next) => {
   res.status(statusCode).json({
     success: false,
     error: message,
-    stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+    ...(process.env.NODE_ENV === "development" ? { stack: err.stack } : {}),
   });
 });
+
 
 // 404 middleware
 app.use((req, res) => {

@@ -20,10 +20,7 @@ const projectSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  assignedEmployees: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
+  assignedEmployees: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   startDate: {
     type: Date,
     required: true
